@@ -90,7 +90,6 @@
     <span>見ている人:</span>
     <button data-who="papa">お父さん</button>
     <button data-who="mama">お母さん</button>
-    <button data-who="kid">ゆたか</button>
   </div>
 </header>
 <main>
@@ -106,8 +105,8 @@
 (function () {
   var SUPABASE_URL = "https://kzacpqrpnoxqtbcstswp.supabase.co";
   var SUPABASE_KEY = "sb_publishable_X-40StOgx5Q6Gl9k6JRCHw_6w4m3d03";
-  var NAMES = { papa: "お父さん", mama: "お母さん", kid: "ゆたか" };
-  var ORDER = ["papa", "mama", "kid"];
+  var NAMES = { papa: "お父さん", mama: "お母さん" };
+  var ORDER = ["papa", "mama"];
 
   var token = "";
   var me = "";
@@ -130,6 +129,7 @@
       token = lsGet("school_token");
     }
     me = lsGet("school_me");
+    if (!NAMES[me]) me = "";   // 選択肢にない人(以前の設定)が残っていたら、選び直してもらう
   })();
 
   function esc(s) {

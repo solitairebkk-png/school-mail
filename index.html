@@ -57,6 +57,12 @@
   .badges { display: flex; gap: 6px; margin: 10px 0 4px; flex-wrap: wrap; }
   .badge { font-size: 12px; border-radius: 999px; padding: 3px 10px; background: var(--line); color: var(--sub); }
   .badge.done { background: var(--done-bg); color: var(--done); }
+  .sum { background: var(--accent-bg); border-radius: 10px; padding: 10px 12px; margin-top: 10px; font-size: 14px; }
+  .sum .h { font-weight: 700; font-size: 12px; color: var(--accent); margin: 6px 0 2px; }
+  .sum .h:first-child { margin-top: 0; }
+  .sum .h.warn { color: var(--warn); }
+  .sum ul { margin: 0; padding-left: 1.2em; }
+  .sum li { margin: 1px 0; word-break: break-word; }
   .body { white-space: pre-wrap; word-break: break-word; font-size: 15px; margin-top: 10px; }
   .body.orig { color: var(--sub); font-size: 14px; }
   .clip { max-height: 9.5em; overflow: hidden; position: relative; }
@@ -137,6 +143,26 @@
     var h = esc(text);
     var re = /(\d{1,2}月\d{1,2}日[^\s、。]{0,6}|\d{4}年\d{1,2}月\d{1,2}日|締め切り|締切|期限|持ち物|持参|必要です|提出|必ず|ご注意|中止|延期|キャンセル|休校|休み)/g;
     return h.replace(re, '<span class="hl">$1</span>');
+  }
+
+  // 改行区切りのテキストを、箇条書きにする(空なら何も出さない)
+  function listHtml(text) {
+    var items = String(text || "").split("\n").map(function (s) {
+      return s.replace(/^[・\-\*\s]+/, "").trim();
+    }).filter(function (s) { return s; });
+    if (!items.length) return "";
+    return "<ul>" + items.map(function (s) { return "<li>" + esc(s) + "</li>"; }).join("") + "</ul>";
+  }
+
+  // 要点・締切・持ち物のまとめ枠(Claude翻訳のメールだけ)
+  function summaryBox(m) {
+    var s = listHtml(m.summary_ja), d = listHtml(m.deadlines_ja), b = listHtml(m.bring_ja);
+    if (!s && !d && !b) return "";
+    return '<div class="sum">' +
+      (s ? '<div class="h">📌 要点</div>' + s : "") +
+      (d ? '<div class="h warn">⏰ 締切・日付</div>' + d : "") +
+      (b ? '<div class="h">🎒 持ち物・準備</div>' + b : "") +
+      "</div>";
   }
 
   function fmtDate(iso) {
@@ -224,6 +250,7 @@
         '<div class="subj">' + esc(subjJa) + "</div>" +
         (subjOrig ? '<div class="subj-orig">' + esc(subjOrig) + "</div>" : "") +
         '<div class="badges">' + badges + "</div>" +
+        summaryBox(m) +
         '<div class="body' + (orig ? " orig" : "") + (open ? "" : " clip") + '">' + (orig ? esc(bodyText) : highlight(bodyText)) + "</div>" +
         '<div class="row">' +
           '<button class="primary" data-act="toggle">' + (open ? "閉じる" : "全文を読む") + "</button>" +
